@@ -5,6 +5,6 @@
 
 The purpose of this repository is to have a folder where I can insert the work I do for my class.
 
-## Purpose
+## Organization Plan
 
-My organization plan includes future projects seperetated by whether they are more for visualizations, EDA, or models.
+My organization plan includes future projects seperated by whether they are more for visualizations, EDA, or models.
