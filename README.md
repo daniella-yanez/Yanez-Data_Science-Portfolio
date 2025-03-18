@@ -3,8 +3,20 @@
 
 ## Purpose
 
-The purpose of this repository is to have a folder where I can insert the work I do for my class.
+The purpose of this repository is to showcase my coding projects, highlighting my skills in **data analysis, visualization, and research**. Each project is designed to strengthen my ability to handle real-world data challenges.  
 
-## Organization Plan
+## New Project: Tidy Data Project
+🔗 Tidy Data Project Repository
 
-My organization plan includes future projects seperated by whether they are more for visualizations, EDA, or models.
+**_Project Overview_**
+This project involves cleaning and reshaping Olympic medalist data from the 2008 Olympics. It demonstrates my ability to:
+
+- Convert raw, unstructured data into a tidy format for better analysis.
+- Use Pandas for efficient data manipulation.
+- Apply data visualization techniques to extract insights.
+**Title**
+Tidy Data Project → (Data Cleaning & Visualization using Pandas, Seaborn, and Matplotlib)
+
+**How This Project Complements My Portfolio**
+Reinforces data cleaning skills by restructuring messy datasets.
+Enhances data storytelling through clear visualizations.
