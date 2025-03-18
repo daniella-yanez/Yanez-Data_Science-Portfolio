@@ -5,7 +5,7 @@
 
 The purpose of this repository is to showcase my coding projects, highlighting my skills in **data analysis, visualization, and research**. Each project is designed to strengthen my ability to handle real-world data challenges.  
 
-## New Project: Tidy Data Project
+## [New Project: Tidy Data Project ](https://github.com/daniella-yanez/TidyData-Project)
 [🔗 Tidy Data Project Repository]([url](https://github.com/daniella-yanez/TidyData-Project))
 
 **_Project Overview_**
