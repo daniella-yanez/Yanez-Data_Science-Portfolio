@@ -1,160 +1,166 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-
 from sklearn.datasets import load_iris, load_wine, load_breast_cancer, load_digits
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
-from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, auc, ConfusionMatrixDisplay
 from sklearn.utils import shuffle
 
-
 # -----------------------------------------------
-#                 Title and Info
+# Load Sample Datasets
 # -----------------------------------------------
-st.title("Supervised Machine Learning: Model Explorer")
-
-st.markdown("""
-Welcome to this interactive classifier app!
-This app provides an interactive interface to experiment with different supervised machine learning models. 
-
-In this app, you can:
-- **Upload your own dataset** or choose from built-in sample datasets.
-- **Adjust hyperparameters** for K-Nearest Neighbors, Logistic Regression, and Decision Tree classifiers.
-- **View performance metrics**, including accuracy, precision, recall, ROC curves, and more.
-""")
-
-# -----------------------------------------------
-#           Load and Preprocess Data
-# -----------------------------------------------
-# Function to load datasets
-def load_data(dataset_option):
-    if dataset_option == "Iris":
+def get_sample_dataset(name):
+    if name == 'Iris':
         data = load_iris()
-    elif dataset_option == "Wine":
+    elif name == 'Wine':
         data = load_wine()
-    elif dataset_option == "Breast Cancer":
+    elif name == 'Breast Cancer':
         data = load_breast_cancer()
-    elif dataset_option == "Digits":
+    elif name == 'Digits':
         data = load_digits()
-    return pd.DataFrame(data.data, columns=data.feature_names), pd.Series(data.target, name="target")
-
-def upload_custom_data(uploaded_file):
-    df = pd.read_csv(uploaded_file)
-    st.write("Dataset preview:")
-    st.dataframe(df.head())
-    if 'target' in df.columns:
-        X = df.drop(columns=['target'])
-        y = df['target']
     else:
-        st.error("No target column found. Please make sure your data has a 'target' column.")
-        return None, None
-    return X, y
+        return None, None, None
+    df = pd.DataFrame(data.data, columns=data.feature_names)
+    df['target'] = data.target
+    return df, data.feature_names, data.target_names
 
-# Function to train selected model
-def train_model(X_train, y_train, model_name, params):
-    if model_name == "KNN":
-        model = KNeighborsClassifier(n_neighbors=params["k"])
-    elif model_name == "Logistic Regression":
-        model = LogisticRegression(C=params["C"], max_iter=1000)
-    elif model_name == "Decision Tree":
-        model = DecisionTreeClassifier(max_depth=params["max_depth"])
-    model.fit(X_train, y_train)
-    return model
+# -----------------------------------------------
+# Sidebar Configuration
+# -----------------------------------------------
+st.sidebar.title("ML Playground")
+dataset_source = st.sidebar.radio("Select Dataset Source", ["Sample Dataset", "Upload Your Own"])
+model_type = st.sidebar.selectbox("Choose Model", ["Logistic Regression", "Decision Tree", "K-Nearest Neighbors"])
 
-# Function to plot confusion matrix
-def plot_confusion_matrix(cm, model_name):
-    plt.figure(figsize=(6, 4))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=["0", "1"], yticklabels=["0", "1"])
-    plt.title(f'{model_name} Confusion Matrix')
-    plt.xlabel('Predicted')
-    plt.ylabel('Actual')
-    st.pyplot(plt)
+# Hyperparameters
+st.sidebar.subheader("Model Hyperparameters")
+if model_type == "Logistic Regression":
+    C_val = st.sidebar.slider("Regularization (C)", 0.01, 10.0, 1.0)
+elif model_type == "Decision Tree":
+    max_depth = st.sidebar.slider("Max Depth", 1, 20, 5)
+elif model_type == "K-Nearest Neighbors":
+    n_neighbors = st.sidebar.slider("n_neighbors (k)", 1, 15, 5)
+
+# -----------------------------------------------
+# Load Dataset
+# -----------------------------------------------
+if dataset_source == "Sample Dataset":
+    dataset_name = st.sidebar.selectbox("Choose Sample Dataset", ["Iris", "Wine", "Breast Cancer", "Digits"])
+    df, feature_names, target_names = get_sample_dataset(dataset_name)
+else:
+    uploaded_file = st.sidebar.file_uploader("Upload CSV", type=["csv"])
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
+        feature_names = df.columns[:-1]
+        target_names = df.iloc[:, -1].unique()
+    else:
+        st.warning("Upload a dataset to continue.")
+        st.stop()
+
+# Preview Data
+st.title("Interactive ML App")
+st.markdown("### Dataset Overview")
+st.dataframe(df.head())
+st.write("**Class Distribution in Target**")
+if 'target' in df.columns:
+    fig, ax = plt.subplots()
+    sns.countplot(data=df, x='target', ax=ax)
+    st.pyplot(fig)
     plt.clf()
+else:
+    st.warning("No 'target' column found in dataset.")
+    st.stop()
 
-# Function to evaluate model performance
-def evaluate_model(model, X_test, y_test, model_name):
-    y_pred = model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    st.write(f"**Accuracy: {accuracy:.2f}**")
+# -----------------------------------------------
+# Train/Test Split & Scaling
+# -----------------------------------------------
+X = df.drop(columns='target')
+y = df['target']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
 
-    # Classification report
-    st.write("**Classification Report:**")
+# -----------------------------------------------
+# Model Training
+# -----------------------------------------------
+if model_type == "Logistic Regression":
+    model = LogisticRegression(C=C_val, max_iter=1000)
+elif model_type == "Decision Tree":
+    model = DecisionTreeClassifier(max_depth=max_depth)
+elif model_type == "K-Nearest Neighbors":
+    model = KNeighborsClassifier(n_neighbors=n_neighbors)
+
+model.fit(X_train_scaled, y_train)
+y_pred = model.predict(X_test_scaled)
+accuracy = accuracy_score(y_test, y_pred)
+
+# -----------------------------------------------
+# Performance Metrics
+# -----------------------------------------------
+st.markdown("### Model Performance")
+st.write(f"**Model**: {model_type}")
+st.write(f"**Accuracy**: {accuracy:.2f}")
+
+# Confusion Matrix
+st.subheader("Confusion Matrix")
+fig, ax = plt.subplots()
+sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d', cmap='Blues', ax=ax)
+st.pyplot(fig)
+plt.clf()
+
+# Classification Report
+st.subheader("Classification Report")
+try:
+    st.text(classification_report(y_test, y_pred, target_names=[str(name) for name in target_names]))
+except Exception as e:
     st.text(classification_report(y_test, y_pred))
 
-    # Confusion matrix
-    cm = confusion_matrix(y_test, y_pred)
-    plot_confusion_matrix(cm, model_name)
-
-    # ROC Curve (for binary classification)
-    if len(np.unique(y_test)) == 2:
-        fpr, tpr, _ = roc_curve(y_test, model.predict_proba(X_test)[:, 1])
+# ROC Curve for Binary Classification
+if len(np.unique(y)) == 2:
+    try:
+        y_prob = model.predict_proba(X_test_scaled)[:, 1]
+        fpr, tpr, thresholds = roc_curve(y_test, y_prob)
         roc_auc = auc(fpr, tpr)
-        plt.figure(figsize=(6, 4))
-        plt.plot(fpr, tpr, color='blue', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
-        plt.plot([0, 1], [0, 1], color='gray', linestyle='--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title(f'ROC Curve ({model_name})')
-        plt.legend(loc="lower right")
-        st.pyplot(plt)
+        st.subheader("ROC Curve")
+        fig, ax = plt.subplots()
+        ax.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+        ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+        ax.set_xlabel('False Positive Rate')
+        ax.set_ylabel('True Positive Rate')
+        ax.set_title('Receiver Operating Characteristic')
+        ax.legend(loc="lower right")
+        st.pyplot(fig)
         plt.clf()
+    except Exception as e:
+        st.warning("Could not plot ROC curve: " + str(e))
 
 # -----------------------------------------------
-#             Streamlit App Layout
+# Interpret Results
 # -----------------------------------------------
-
-# Dataset selection
-st.markdown("### Select or Upload a Dataset")
-dataset_option = st.radio("Choose a dataset", options=["Iris", "Wine", "Breast Cancer", "Digits", "Upload Custom CSV"])
-
-# If custom upload
-if dataset_option == "Upload Custom CSV":
-    uploaded_file = st.file_uploader("Upload your dataset (CSV)", type=["csv"])
-    if uploaded_file:
-        X, y = upload_custom_data(uploaded_file)
-    else:
-        st.write("Please upload a file to proceed.")
+st.markdown("### Results Interpretation")
+st.write(f"Your model predicts correctly about **{accuracy * 100:.2f}%** of the time.")
+st.markdown("- The confusion matrix shows how many predictions were correct (diagonal) vs incorrect (off-diagonal).")
+if len(np.unique(y)) == 2:
+    st.markdown("- Since this is a binary classification problem, we also show the ROC curve and AUC score as additional metrics.")
 else:
-    X, y = load_data(dataset_option)
+    st.markdown("- This is a multiclass classification problem; precision, recall, and F1-score per class help interpret the results.")
 
-# Split data into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Hyperparameter controls
-st.markdown("### Select Model and Hyperparameters")
-model_name = st.selectbox("Select Model", ["KNN", "Logistic Regression", "Decision Tree"])
-
-if model_name == "KNN":
-    k = st.slider("Select number of neighbors (k)", min_value=1, max_value=21, step=2, value=5)
-    params = {"k": k}
-elif model_name == "Logistic Regression":
-    C = st.slider("Select C (regularization parameter)", min_value=0.01, max_value=10.0, step=0.01, value=1.0)
-    params = {"C": C}
-elif model_name == "Decision Tree":
-    max_depth = st.slider("Select max depth", min_value=1, max_value=20, value=5)
-    params = {"max_depth": max_depth}
-
-# Model training and evaluation
-if st.button("Train Model"):
-    # Train selected model
-    model = train_model(X_train, y_train, model_name, params)
-    # Evaluate model performance
-    evaluate_model(model, X_test, y_test, model_name)
-    
 # -----------------------------------------------
-#         Conclusion and Additional Info
+# Final Note
 # -----------------------------------------------
-st.markdown("### Next Steps")
-st.write("""
-Once you have explored the model, you can:
-- Try adjusting the hyperparameters to see how they impact performance.
-- Experiment with other datasets or upload your own to test various models.
-""")
+st.markdown("---")
+st.markdown("**Next Steps:**")
+st.markdown("- Try adjusting the hyperparameters to see how they impact performance.")
+st.markdown("- Experiment with other datasets or upload your own to test various models.")
+
+# -----------------------------------------------
+# Footer and GitHub Link
+# -----------------------------------------------
+st.markdown("---")
+st.markdown("**Made with ❤️ by Emily | [View on GitHub](https://github.com/emily-portfolio/ml-streamlit-app)**")
