@@ -163,4 +163,4 @@ st.markdown("- Experiment with other datasets or upload your own to test various
 # Footer and GitHub Link
 # -----------------------------------------------
 st.markdown("---")
-st.markdown("**Made with ❤️ by Emily | [View on GitHub](https://github.com/emily-portfolio/ml-streamlit-app)**")
+st.markdown("**For any questions, email daniellamartinezyanez7@gmail.com**")
