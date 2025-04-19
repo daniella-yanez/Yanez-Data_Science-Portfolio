@@ -63,7 +63,7 @@ else:
         st.stop()
 
 # Preview Data
-st.title("Interactive ML App")
+st.title("Supervised Machine Learning: Model Explorer")
 st.markdown("### Dataset Overview")
 st.dataframe(df.head())
 st.write("**Class Distribution in Target**")
