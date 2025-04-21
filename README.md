@@ -8,6 +8,7 @@ The purpose of this repository is to showcase my coding projects, highlighting m
 ## [New Project: Tidy Data Project ](https://github.com/daniella-yanez/TidyData-Project)
 
 **_Project Overview_**
+
 This project involves cleaning and reshaping Olympic medalist data from the 2008 Olympics. It demonstrates my ability to:
 
 - Convert raw, unstructured data into a tidy format for better analysis.
@@ -23,6 +24,7 @@ Enhances data storytelling through clear visualizations.
 ## [Machine Learning App – Streamlit Deployment](https://github.com/daniella-yanez/Yanez-Data_Science-Portfolio/tree/main/MLStreamlitApp)
 
 **_Project Overview_**
+
 This project is an interactive Streamlit web application that allows users to upload datasets, select and train supervised machine learning models (Logistic Regression, Decision Tree, or K-Nearest Neighbors), and view performance results like accuracy, classification reports, confusion matrices, and ROC curves. Users can also adjust model hyperparameters and see how these changes affect model outcomes in real-time.
 
 This app deepened my understanding of supervised learning workflows, feature scaling, and evaluation metrics. It also gave me hands-on experience with interactive Python development and deploying a machine learning model via Streamlit Community Cloud.
