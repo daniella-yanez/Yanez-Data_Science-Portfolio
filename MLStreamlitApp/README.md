@@ -26,7 +26,7 @@ You can upload your own CSV file or use classic datasets provided, then experime
 
 ## How to Use the App
 ### 🔗 Deploy App
-👉 [Check out the live app here!](LINKHERE)
+👉 [Check out the live app here!](https://daniella-yanez-hynqnvufsbjcmb8e9ewipq.streamlit.app/)
 
 ---
 
