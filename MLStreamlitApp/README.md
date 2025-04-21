@@ -43,19 +43,31 @@ cd MLStreamlitapp
 * Decision Tree * | max_depth, criterion, min_samples_split
 * KNN * | n_neighbors, weights, metric
 
+---
+
 ## Visuals
-### [1. Interface Example](ML_Playground_Interface.png)
+<h3>1. Interface Example</h3>
+<img src="images/ML_Playground_Interface.png" alt="Interface Screenshot" width="380"/>
+
 This screenshot shows the clean, interactive interface of the Machine Learning Explorer app. It includes:
 - A preview of the uploaded dataset
 - Automatically detected column types
 - An overview of the target variable's distribution
-  
-### [Dataset Overview Example](Data_Overview_Example.png)
+
+**  **
+
+<h3>2. Dataset Overview Example</h3>
+<img src="images/Dataset_Overview_Example.png" alt="Dataset Overview" width="400"/>
+
 This screenshot displays the top of the interface, showing:
 - The uploaded dataset (Iris dataset in this example)
 - A dynamic preview of feature columns and the target variable  
 
-### [Results Interpretation Example](Results_Interpretation_Example.png)
+** **
+
+<h3>3. Results Interpretation Example</h3>
+<img src="images/Results_Interpretation_Example.png" alt="Results Interpretation" width="600"/>
+
 This section explains what the model results mean in plain language:
 - Summary of model accuracy
 - Bullet points interpreting the confusion matrix and classification report
