@@ -44,12 +44,22 @@ cd MLStreamlitapp
 * KNN * | n_neighbors, weights, metric
 
 ## Visuals
-### Interface Example
+### [1. Interface Example](ML_Playground_Interface.png)
+This screenshot shows the clean, interactive interface of the Machine Learning Explorer app. It includes:
+- A preview of the uploaded dataset
+- Automatically detected column types
+- An overview of the target variable's distribution
+  
+### [Dataset Overview Example](Data_Overview_Example.png)
+This screenshot displays the top of the interface, showing:
+- The uploaded dataset (Iris dataset in this example)
+- A dynamic preview of feature columns and the target variable  
 
-### Model Output No.1
-
-### ROC Curve Example
-
+### [Results Interpretation Example](Results_Interpretation_Example.png)
+This section explains what the model results mean in plain language:
+- Summary of model accuracy
+- Bullet points interpreting the confusion matrix and classification report
+- Suggested next steps for users to refine their model  
 
 ## References
 [- An Introduction to Statistical Learning ]([url](https://www.statlearning.com/))
