@@ -12,9 +12,17 @@ With this app, users can:
 - Visualize results in real time
 - Evaluate clustering quality with silhouette scores or dendrograms
 
-## Instructions
+---
+
+## How to Use the App
+### 🔗 Deploy App
+👉 [Check out the live app here!](INPUTLINKHERE)
 
 ### Run Locally
+**Clone this repo**
+```bash```
+git clone LINK SAMPLE: https://github.com/daniella-yanez/MLStreamlitapp.git REPLACE
+cd MLStreamlitapp
 
 **Dependencies:**
 
@@ -28,34 +36,40 @@ With this app, users can:
 - scipy
 - plotly
 
+---
+
 ## App Features ##
-**Models Implemented**
-- K-Means Clustering
-    - Choose number of clusters (k)
+### Models Implemented ###
+- K-Means Clustering ✅
+    - Choose number of clusters **(k)**
     - Visualize using 2D scatter plots
     - Evaluate with silhouette score
     - Elbow plot included to help identify optimal k
 
-- Hierarchical Clustering
-    - Select linkage type (single, complete, average, ward)
+- Hierarchical Clustering ✅
+    - Select **linkage type** (single, complete, average, ward)
     - Adjust distance threshold
     - View dendrogram and cluster output
 
-- Principal Component Analysis (PCA)
-    - Choose number of components
+- Principal Component Analysis (PCA) ✅
+    - Choose **number of components**
     - View explained variance ratio
     - Visualize principal components in 2D
 
-** Hyperparameter Tuning **
-All models feature interactive controls via sliders and dropdowns to:
+### Hyperparameter Tuning ###
+- All models feature interactive controls via sliders and dropdowns to:
     - Modify clustering parameters (e.g., k or linkage method)
     - Select the number of PCA components
     - Recompute and visualize output dynamically
+
+---
 
 ## Visual Examples (to be added later)
 1. K-Means Clustering Example
 2. Hierarchical Clustering Dendrogram
 3. PCA Scree Plot and 2D Projection
+
+---
 
 ## References
 scikit-learn Clustering: https://scikit-learn.org/stable/modules/clustering.html
@@ -73,3 +87,4 @@ Plotly Python Library: https://plotly.com/python/
 
 ```bash
 pip install -r requirements.txt
+
