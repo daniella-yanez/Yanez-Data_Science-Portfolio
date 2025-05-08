@@ -28,7 +28,7 @@ except ModuleNotFoundError:
 # Streamlit App Setup
 # -----------------------------------------------
 st.set_page_config(layout="wide")
-st.title("Interactive Clustering Explorer")
+st.title("Machine Learning Clustering App--Unsupervised App")
 
 # -----------------------------------------------
 # Sidebar: Data Upload and User Inputs
@@ -55,6 +55,7 @@ if uploaded_file:
     data = pd.read_csv(uploaded_file)
 elif use_sample:
     try:
+        app_dir = os.path.dirname(__file__) #makes app portable
         file_path = os.path.join("data", "Country-data.csv")
         data = pd.read_csv(file_path)
     except Exception as e:
