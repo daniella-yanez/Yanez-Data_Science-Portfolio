@@ -38,15 +38,6 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Upload your CSV dataset", type=["csv"])
     use_sample = st.checkbox("Use Sample Dataset (Country Data)", value=False)
 
-    clustering_method = st.selectbox("Choose clustering method:", ["K-Means", "Hierarchical"])
-    n_clusters = st.slider("Number of clusters (k):", 2, 10, 4)
-
-    linkage_method = "ward"
-    if clustering_method == "Hierarchical":
-        linkage_method = st.selectbox("Linkage method:", ["ward", "single", "complete", "average"])
-
-    n_components = st.slider("# PCA Components for Visualization:", 2, 3, 2)
-
 # -----------------------------------------------
 # Load Dataset
 # -----------------------------------------------
@@ -55,7 +46,7 @@ if uploaded_file:
     data = pd.read_csv(uploaded_file)
 elif use_sample:
     try:
-        file_path = os.path.join("data", "Country-data.csv")  # or just "Country-data.csv" if in root
+        file_path = os.path.join("data", "Country-data.csv")
         data = pd.read_csv(file_path)
     except Exception as e:
         st.error(f"Failed to load bundled sample dataset: {e}")
@@ -64,10 +55,10 @@ if data is not None:
     initial_rows = data.shape[0]
     data = data.dropna()
     dropped_rows = initial_rows - data.shape[0]
-    
+
     if dropped_rows > 0:
         st.warning(f"Dropped {dropped_rows} rows with missing values.")
-    # Normalize column names
+
     data.columns = [col.strip().lower() for col in data.columns]
     numeric_data = data.select_dtypes(include=np.number)
 
@@ -78,11 +69,44 @@ if data is not None:
         st.dataframe(data.head())
 
         # -----------------------------------------------
-        # Preprocessing and Dimensionality Reduction
+        # Preprocessing and PCA
         # -----------------------------------------------
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(numeric_data)
 
+        # Suggest optimal number of clusters (KMeans with silhouette)
+        silhouette_scores = {}
+        for k in range(2, 11):
+            km = KMeans(n_clusters=k, random_state=42)
+            labels = km.fit_predict(X_scaled)
+            silhouette_scores[k] = silhouette_score(X_scaled, labels)
+        suggested_k = max(silhouette_scores, key=silhouette_scores.get)
+
+        # Sidebar controls after suggestion
+        with st.sidebar:
+            st.header("Clustering Parameters")
+            clustering_method = st.selectbox("Choose clustering method:", ["K-Means", "Hierarchical"])
+            use_suggestion = st.checkbox(f"Use suggested number of clusters (k={suggested_k})", value=True)
+            if use_suggestion:
+                n_clusters = suggested_k
+            else:
+                n_clusters = st.slider("Number of clusters (k):", 2, 10, suggested_k)
+
+            linkage_method = "ward"
+            if clustering_method == "Hierarchical":
+                linkage_method = st.selectbox("Linkage method:", ["ward", "single", "complete", "average"])
+
+            n_components = st.slider("# PCA Components for Visualization:", 2, 3, 2)
+
+            if clustering_method == "Hierarchical":
+                sample_size = st.slider("Sample size for dendrogram (0 = full dataset):", 0, 500, 100)
+                truncate_dendrogram = st.checkbox("Truncate dendrogram? (Show only last p merges)")
+                truncate_mode = 'lastp' if truncate_dendrogram else None
+                p_value = st.slider("# Clusters to display (used if truncating):", 2, 30, 10) if truncate_dendrogram else None
+
+        st.info(f"Suggested number of clusters based on silhouette score: {suggested_k}")
+
+        # Run PCA
         pca = PCA(n_components=n_components)
         X_pca = pca.fit_transform(X_scaled)
 
@@ -100,7 +124,7 @@ if data is not None:
         data['cluster'] = cluster_labels
 
         # -----------------------------------------------
-        # PCA Scatter Plot Visualization
+        # PCA Scatter Plot
         # -----------------------------------------------
         st.subheader("PCA Scatter Plot")
         fig, ax = plt.subplots()
@@ -112,27 +136,25 @@ if data is not None:
 
         st.markdown(f"**Silhouette Score:** {silhouette_avg:.2f}")
 
-       # -----------------------------------------------
-        # World Map Visualization (for any dataset with 'country' column)
+        # -----------------------------------------------
+        # World Map Visualization
         # -----------------------------------------------
         st.subheader("World Map Visualization")
-        
+
         if "country" in data.columns:
             if PLOTLY_AVAILABLE:
-                # Detect numeric columns (excluding 'cluster' if it's object/string)
                 numeric_columns = data.select_dtypes(include=np.number).columns.tolist()
-        
+
                 if not numeric_columns:
                     st.warning("No numeric columns found for choropleth visualization.")
                 else:
-                    # Let user choose what to visualize
                     default_var = "cluster" if "cluster" in numeric_columns else numeric_columns[0]
                     choropleth_variable = st.selectbox(
                         "Choose variable to map:",
                         options=numeric_columns,
                         index=numeric_columns.index(default_var)
                     )
-        
+
                     try:
                         fig_map = px.choropleth(
                             data_frame=data,
@@ -175,9 +197,23 @@ if data is not None:
         # -----------------------------------------------
         if clustering_method == "Hierarchical":
             st.subheader("Hierarchical Dendrogram")
-            Z = linkage(X_scaled, method=linkage_method)
+            sample_indices = data.index.to_numpy()
+            if sample_size > 0 and sample_size < X_scaled.shape[0]:
+                sampled_indices = np.random.choice(X_scaled.shape[0], sample_size, replace=False)
+                X_dendro = X_scaled[sampled_indices]
+                sample_indices = data.index[sampled_indices]
+            else:
+                X_dendro = X_scaled
+
+            Z = linkage(X_dendro, method=linkage_method)
             fig, ax = plt.subplots(figsize=(10, 5))
-            dendrogram(Z, labels=data.index.to_numpy(), ax=ax)
+            dendrogram(
+                Z,
+                labels=sample_indices,
+                ax=ax,
+                truncate_mode=truncate_mode,
+                p=p_value if truncate_mode else None
+            )
             ax.set_title("Hierarchical Clustering Dendrogram")
             ax.set_xlabel("Index")
             ax.set_ylabel("Distance")
