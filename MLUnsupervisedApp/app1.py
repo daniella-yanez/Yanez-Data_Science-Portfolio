@@ -54,15 +54,11 @@ data = None
 if uploaded_file:
     data = pd.read_csv(uploaded_file)
 elif use_sample:
-    if KAGGLEHUB_AVAILABLE:
-        try:
-            path = kagglehub.dataset_download("rohan0301/unsupervised-learning-on-country-data")
-            file_path = os.path.join(path, 'Country-data.csv')
-            data = pd.read_csv(file_path)
-        except Exception as e:
-            st.error(f"Error loading sample dataset: {e}")
-    else:
-        st.warning("KaggleHub not installed. Please upload your own dataset or install KaggleHub.")
+    try:
+        file_path = os.path.join("data", "Country-data.csv")  # or just "Country-data.csv" if in root
+        data = pd.read_csv(file_path)
+    except Exception as e:
+        st.error(f"Failed to load bundled sample dataset: {e}")
 
 if data is not None:
     # Normalize column names
