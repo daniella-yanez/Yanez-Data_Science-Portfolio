@@ -61,6 +61,12 @@ elif use_sample:
         st.error(f"Failed to load bundled sample dataset: {e}")
 
 if data is not None:
+    initial_rows = data.shape[0]
+    data = data.dropna()
+    dropped_rows = initial_rows - data.shape[0]
+    
+    if dropped_rows > 0:
+        st.warning(f"Dropped {dropped_rows} rows with missing values.")
     # Normalize column names
     data.columns = [col.strip().lower() for col in data.columns]
     numeric_data = data.select_dtypes(include=np.number)
