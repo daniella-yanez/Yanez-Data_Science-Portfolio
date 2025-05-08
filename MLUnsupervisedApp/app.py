@@ -27,16 +27,16 @@ except ModuleNotFoundError:
 # -----------------------------------------------
 # Streamlit App Setup
 # -----------------------------------------------
-st.set_page_config(page_title="ML Unsupervised App", layout="wide")
-st.title("Unsupervised Machine Learning App")
+st.set_page_config(layout="wide")
+st.title("Interactive Clustering Explorer")
 
 # -----------------------------------------------
 # Sidebar: Data Upload and User Inputs
 # -----------------------------------------------
 with st.sidebar:
     st.header("Upload and Select Options")
-    use_sample = st.checkbox("Use Sample Dataset (Country Data)", value=False)
     uploaded_file = st.file_uploader("Upload your CSV dataset", type=["csv"])
+    use_sample = st.checkbox("Use Sample Dataset (Country Data)", value=False)
 
     clustering_method = st.selectbox("Choose clustering method:", ["K-Means", "Hierarchical"])
     n_clusters = st.slider("Number of clusters (k):", 2, 10, 4)
@@ -51,24 +51,23 @@ with st.sidebar:
 # Load Dataset
 # -----------------------------------------------
 data = None
-if uploaded_file is not None:
-    try:
-        data = pd.read_csv(uploaded_file)
-        st.success("Custom dataset uploaded successfully.")
-    except Exception as e:
-        st.error(f"Failed to read uploaded CSV: {e}")
+if uploaded_file:
+    data = pd.read_csv(uploaded_file)
 elif use_sample:
     try:
-        file_path = os.path.join("data", "Country-data.csv")
+        file_path = os.path.join("data", "Country-data.csv")  # or just "Country-data.csv" if in root
         data = pd.read_csv(file_path)
-        st.success("Sample dataset loaded successfully.")
     except Exception as e:
-        st.error(f"Failed to load sample dataset: {e}")
+        st.error(f"Failed to load bundled sample dataset: {e}")
 
-# -----------------------------------------------
-# Main Logic
-# -----------------------------------------------
 if data is not None:
+    initial_rows = data.shape[0]
+    data = data.dropna()
+    dropped_rows = initial_rows - data.shape[0]
+    
+    if dropped_rows > 0:
+        st.warning(f"Dropped {dropped_rows} rows with missing values.")
+    # Normalize column names
     data.columns = [col.strip().lower() for col in data.columns]
     numeric_data = data.select_dtypes(include=np.number)
 
@@ -78,14 +77,18 @@ if data is not None:
         st.subheader("Dataset Preview")
         st.dataframe(data.head())
 
-        # Preprocessing
+        # -----------------------------------------------
+        # Preprocessing and Dimensionality Reduction
+        # -----------------------------------------------
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(numeric_data)
 
         pca = PCA(n_components=n_components)
         X_pca = pca.fit_transform(X_scaled)
 
+        # -----------------------------------------------
         # Clustering
+        # -----------------------------------------------
         if clustering_method == "K-Means":
             model = KMeans(n_clusters=n_clusters, random_state=42)
             cluster_labels = model.fit_predict(X_scaled)
@@ -96,7 +99,9 @@ if data is not None:
         silhouette_avg = silhouette_score(X_scaled, cluster_labels)
         data['cluster'] = cluster_labels
 
-        # PCA Plot
+        # -----------------------------------------------
+        # PCA Scatter Plot Visualization
+        # -----------------------------------------------
         st.subheader("PCA Scatter Plot")
         fig, ax = plt.subplots()
         scatter = ax.scatter(X_pca[:, 0], X_pca[:, 1], c=cluster_labels, cmap='viridis', s=50, edgecolors='k')
@@ -107,23 +112,49 @@ if data is not None:
 
         st.markdown(f"**Silhouette Score:** {silhouette_avg:.2f}")
 
-        # World Map Visualization
-        st.subheader("World Map Visualization (if 'country' column present)")
-        st.write("Columns in dataset:", list(data.columns))
-        if 'country' in data.columns:
+       # -----------------------------------------------
+        # World Map Visualization (for any dataset with 'country' column)
+        # -----------------------------------------------
+        st.subheader("World Map Visualization")
+        
+        if "country" in data.columns:
             if PLOTLY_AVAILABLE:
-                try:
-                    fig_map = px.choropleth(data, locations='country', locationmode='country names',
-                                            color='cluster', title='Country Clusters', color_continuous_scale='Viridis')
-                    st.plotly_chart(fig_map)
-                except Exception as e:
-                    st.error(f"Failed to generate choropleth: {e}")
+                # Detect numeric columns (excluding 'cluster' if it's object/string)
+                numeric_columns = data.select_dtypes(include=np.number).columns.tolist()
+        
+                if not numeric_columns:
+                    st.warning("No numeric columns found for choropleth visualization.")
+                else:
+                    # Let user choose what to visualize
+                    default_var = "cluster" if "cluster" in numeric_columns else numeric_columns[0]
+                    choropleth_variable = st.selectbox(
+                        "Choose variable to map:",
+                        options=numeric_columns,
+                        index=numeric_columns.index(default_var)
+                    )
+        
+                    try:
+                        fig_map = px.choropleth(
+                            data_frame=data,
+                            locations="country",
+                            locationmode="country names",
+                            color=choropleth_variable,
+                            hover_name="country",
+                            hover_data=numeric_columns,
+                            color_continuous_scale="Viridis",
+                            title=f"Choropleth Map: {choropleth_variable}"
+                        )
+                        st.plotly_chart(fig_map)
+                    except Exception as e:
+                        st.error(f"Error generating choropleth map: {e}")
             else:
-                st.warning("Plotly not installed. Install it to see the choropleth map.")
+                st.warning("Plotly not installed. Install it with `pip install plotly` to view the map.")
         else:
-            st.info("Add a 'country' column to your data for map visualization.")
+            st.info("To show a choropleth map, your dataset must include a column named 'country'.")
 
-        # Elbow Plot
+        # -----------------------------------------------
+        # Elbow Plot for K-Means
+        # -----------------------------------------------
         if clustering_method == "K-Means":
             st.subheader("K-Means Elbow Plot")
             distortions = []
@@ -139,7 +170,9 @@ if data is not None:
             ax.set_title('Elbow Method For Optimal k')
             st.pyplot(fig)
 
-        # Dendrogram
+        # -----------------------------------------------
+        # Dendrogram for Hierarchical Clustering
+        # -----------------------------------------------
         if clustering_method == "Hierarchical":
             st.subheader("Hierarchical Dendrogram")
             Z = linkage(X_scaled, method=linkage_method)
@@ -150,8 +183,10 @@ if data is not None:
             ax.set_ylabel("Distance")
             st.pyplot(fig)
 
-        # Final Clustered Output
+        # -----------------------------------------------
+        # Display Clustered Data
+        # -----------------------------------------------
         st.subheader("Clustered Data Preview")
         st.dataframe(data[['cluster'] + [col for col in data.columns if col != 'cluster']].head())
 else:
-    st.info("Please upload a dataset or select the sample to begin.")
+    st.info("Please upload a dataset or select a sample to begin.")
