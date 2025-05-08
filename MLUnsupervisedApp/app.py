@@ -44,9 +44,6 @@ with st.sidebar:
     linkage_method = "ward"
     if clustering_method == "Hierarchical":
         linkage_method = st.selectbox("Linkage method:", ["ward", "single", "complete", "average"])
-        sample_size = st.slider("Sample size for dendrogram (0 = all):", 0, 500, 0)
-        truncate_mode = st.checkbox("Truncate dendrogram display?")
-        p_trunc = st.slider("# of clusters to show in truncated dendrogram:", 2, 20, 10)
 
     n_components = st.slider("# PCA Components for Visualization:", 2, 3, 2)
 
@@ -70,7 +67,6 @@ if data is not None:
 
     if dropped_rows > 0:
         st.warning(f"Dropped {dropped_rows} rows with missing values.")
-
     data.columns = [col.strip().lower() for col in data.columns]
     numeric_data = data.select_dtypes(include=np.number)
 
@@ -80,18 +76,12 @@ if data is not None:
         st.subheader("Dataset Preview")
         st.dataframe(data.head())
 
-        # -----------------------------------------------
-        # Preprocessing and Dimensionality Reduction
-        # -----------------------------------------------
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(numeric_data)
 
         pca = PCA(n_components=n_components)
         X_pca = pca.fit_transform(X_scaled)
 
-        # -----------------------------------------------
-        # Clustering
-        # -----------------------------------------------
         if clustering_method == "K-Means":
             model = KMeans(n_clusters=n_clusters, random_state=42)
             cluster_labels = model.fit_predict(X_scaled)
@@ -102,9 +92,6 @@ if data is not None:
         silhouette_avg = silhouette_score(X_scaled, cluster_labels)
         data['cluster'] = cluster_labels
 
-        # -----------------------------------------------
-        # PCA Scatter Plot Visualization
-        # -----------------------------------------------
         st.subheader("PCA Scatter Plot")
         fig, ax = plt.subplots()
         scatter = ax.scatter(X_pca[:, 0], X_pca[:, 1], c=cluster_labels, cmap='viridis', s=50, edgecolors='k')
@@ -114,6 +101,53 @@ if data is not None:
         st.pyplot(fig)
 
         st.markdown(f"**Silhouette Score:** {silhouette_avg:.2f}")
+
+        # -----------------------------------------------
+        # Silhouette Score Heatmap (for model comparison)
+        # -----------------------------------------------
+        st.subheader("Silhouette Score Heatmap (K-Means vs Hierarchical)")
+
+        silhouette_scores = {}
+
+        if clustering_method == "K-Means":
+            k_values = list(range(2, 11))
+            scores = []
+            for k in k_values:
+                km = KMeans(n_clusters=k, random_state=42)
+                labels = km.fit_predict(X_scaled)
+                score = silhouette_score(X_scaled, labels)
+                scores.append(score)
+            silhouette_scores['K-Means'] = scores
+
+            df_scores = pd.DataFrame(silhouette_scores, index=k_values)
+            fig, ax = plt.subplots()
+            sns.heatmap(df_scores.T, annot=True, cmap="YlGnBu", fmt=".2f", ax=ax)
+            ax.set_xlabel("Number of Clusters (k)")
+            ax.set_title("Silhouette Scores for K-Means")
+            st.pyplot(fig)
+
+        elif clustering_method == "Hierarchical":
+            linkage_methods = ["ward", "single", "complete", "average"]
+            k_values = list(range(2, 11))
+            for method in linkage_methods:
+                scores = []
+                for k in k_values:
+                    try:
+                        hc = AgglomerativeClustering(n_clusters=k, linkage=method)
+                        labels = hc.fit_predict(X_scaled)
+                        score = silhouette_score(X_scaled, labels)
+                        scores.append(score)
+                    except Exception as e:
+                        scores.append(np.nan)
+                silhouette_scores[method] = scores
+
+            df_scores = pd.DataFrame(silhouette_scores, index=k_values).T
+            fig, ax = plt.subplots(figsize=(10, 4))
+            sns.heatmap(df_scores, annot=True, cmap="YlOrRd", fmt=".2f", ax=ax)
+            ax.set_ylabel("Linkage Method")
+            ax.set_xlabel("Number of Clusters (k)")
+            ax.set_title("Silhouette Scores for Hierarchical Clustering")
+            st.pyplot(fig)
 
         # -----------------------------------------------
         # World Map Visualization (for any dataset with 'country' column)
@@ -176,19 +210,9 @@ if data is not None:
         # -----------------------------------------------
         if clustering_method == "Hierarchical":
             st.subheader("Hierarchical Dendrogram")
-            dendro_data = X_scaled
-            labels = data.index.to_numpy()
-            if sample_size > 0 and sample_size < X_scaled.shape[0]:
-                sampled_idx = np.random.choice(X_scaled.shape[0], sample_size, replace=False)
-                dendro_data = X_scaled[sampled_idx]
-                labels = labels[sampled_idx]
-
-            Z = linkage(dendro_data, method=linkage_method)
+            Z = linkage(X_scaled, method=linkage_method)
             fig, ax = plt.subplots(figsize=(10, 5))
-            if truncate_mode:
-                dendrogram(Z, truncate_mode='lastp', p=p_trunc, ax=ax, show_contracted=True)
-            else:
-                dendrogram(Z, labels=labels, ax=ax)
+            dendrogram(Z, labels=data.index.to_numpy(), ax=ax)
             ax.set_title("Hierarchical Clustering Dendrogram")
             ax.set_xlabel("Index")
             ax.set_ylabel("Distance")
