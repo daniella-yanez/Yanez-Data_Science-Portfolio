@@ -106,54 +106,45 @@ if data is not None:
 
         st.markdown(f"**Silhouette Score:** {silhouette_avg:.2f}")
 
+       # -----------------------------------------------
+        # World Map Visualization (for any dataset with 'country' column)
         # -----------------------------------------------
-        # World Map Visualization (if 'country' column exists)
-        # -----------------------------------------------
-        st.subheader("World Map Visualization (if 'country' column present)")
-        st.write("Columns in dataset:", list(data.columns))
-        if 'country' in data.columns:
+        st.subheader("World Map Visualization")
+        
+        if "country" in data.columns:
             if PLOTLY_AVAILABLE:
-                st.markdown("### Choropleth Map")
+                # Detect numeric columns (excluding 'cluster' if it's object/string)
+                numeric_columns = data.select_dtypes(include=np.number).columns.tolist()
         
-                # Select variable to color by
-                choropleth_variable = st.selectbox(
-                    "Choose a variable to visualize on the world map:",
-                    options=["cluster", "income", "child_mort", "health", "life_expec", "gdpp"]
-                )
+                if not numeric_columns:
+                    st.warning("No numeric columns found for choropleth visualization.")
+                else:
+                    # Let user choose what to visualize
+                    default_var = "cluster" if "cluster" in numeric_columns else numeric_columns[0]
+                    choropleth_variable = st.selectbox(
+                        "Choose variable to map:",
+                        options=numeric_columns,
+                        index=numeric_columns.index(default_var)
+                    )
         
-                try:
-                    if choropleth_variable == "cluster":
-                        data["cluster"] = data["cluster"].astype(str)
+                    try:
                         fig_map = px.choropleth(
-                            data,
-                            locations="country",
-                            locationmode="country names",
-                            color="cluster",
-                            hover_name="country",
-                            color_discrete_sequence=px.colors.qualitative.Set3,
-                            title="World Map Colored by Cluster"
-                        )
-                    else:
-                        fig_map = px.choropleth(
-                            data,
+                            data_frame=data,
                             locations="country",
                             locationmode="country names",
                             color=choropleth_variable,
                             hover_name="country",
-                            hover_data=["income", "health", "life_expec", "gdpp"],
+                            hover_data=numeric_columns,
                             color_continuous_scale="Viridis",
-                            title=f"World Map Colored by {choropleth_variable.capitalize()}"
+                            title=f"Choropleth Map: {choropleth_variable}"
                         )
-        
-                    st.plotly_chart(fig_map)
-        
-                except Exception as e:
-                    st.error(f"Failed to generate choropleth: {e}")
+                        st.plotly_chart(fig_map)
+                    except Exception as e:
+                        st.error(f"Error generating choropleth map: {e}")
             else:
-                st.warning("Plotly not installed. Install it to see the choropleth map.")
+                st.warning("Plotly not installed. Install it with `pip install plotly` to view the map.")
         else:
-            st.info("Add a 'country' column to your data for map visualization.")
-
+            st.info("To show a choropleth map, your dataset must include a column named 'country'.")
 
         # -----------------------------------------------
         # Elbow Plot for K-Means
