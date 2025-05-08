@@ -1,6 +1,6 @@
 # Unsupervised Learning Explorer: Clustering & Dimensionality Reduction Web App
 
-## Project Overview
+## Project Overview and Purpose
 
 This Streamlit web application allows users to explore unsupervised learning techniques—specifically **K-Means Clustering**, **Hierarchical Clustering**, and **Principal Component Analysis (PCA)**—on any uploaded dataset. The goal of this project is to create an interactive tool for analyzing high-dimensional data, uncovering structure through clustering and dimensionality reduction.
 
@@ -23,6 +23,10 @@ With this app, users can:
 ```bash```
 git clone LINK SAMPLE: https://github.com/daniella-yanez/MLStreamlitapp.git REPLACE
 cd MLStreamlitapp
+
+**Install required packages:**
+```bash```
+pip install -r requirements.txt
 
 **Dependencies:**
 
@@ -66,25 +70,25 @@ cd MLStreamlitapp
 
 ## Visual Examples (to be added later)
 1. K-Means Clustering Example
+   
+**  **
+
 2. Hierarchical Clustering Dendrogram
+
+**  **
+
 3. PCA Scree Plot and 2D Projection
 
 ---
 
-## References
-scikit-learn Clustering: https://scikit-learn.org/stable/modules/clustering.html
+## References 🔗
+- [scikit-learn Clustering](https://scikit-learn.org/stable/modules/clustering.html)
 
-PCA in scikit-learn: https://scikit-learn.org/stable/modules/decomposition.html#pca
+- [PCA in scikit-learn](https://scikit-learn.org/stable/modules/decomposition.html#pca)
 
-Silhouette Score: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_score.html
+- [Silhouette Score](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_score.html)
 
-Streamlit Documentation: https://docs.streamlit.io/
+- [Streamlit Documentation](https://docs.streamlit.io/)
 
-Plotly Python Library: https://plotly.com/python/
-
-
-**Install required packages:**
-
-```bash
-pip install -r requirements.txt
+- [Plotly Python Library](https://plotly.com/python/)
 
