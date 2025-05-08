@@ -37,19 +37,18 @@ with st.sidebar:
     st.header("Upload and Select Options")
     uploaded_file = st.file_uploader("Upload your CSV dataset", type=["csv"])
     use_sample = st.checkbox("Use Sample Dataset (Country Data)", value=False)
+    
+    with st.expander("ℹ️ What are the clustering methods?"):
+        st.markdown("""
+        **K-Means Clustering** partitions data into `k` groups by minimizing the distance between each point and its cluster center. 
+        It's fast and works best with spherical clusters of similar size.
 
-with st.expander("ℹ️ What are the clustering methods?"):
-    st.markdown("""
-    **K-Means Clustering** partitions data into `k` groups by minimizing the distance between each point and its cluster center. 
-    It's fast and works best with spherical clusters of similar size.
+        **Hierarchical Clustering** builds a tree of clusters using either bottom-up (agglomerative) or top-down (divisive) merging. 
+        It's useful when you want to see nested groupings of data.
 
-    **Hierarchical Clustering** builds a tree of clusters using either bottom-up (agglomerative) or top-down (divisive) merging. 
-    It's useful when you want to see nested groupings of data.
-
-    📈 The number of clusters (`k`) determines how many groups the algorithm will try to form. Choosing more clusters can better fit fine-grained patterns but may overfit.
-    """)
-  
-
+        📈 The number of clusters (`k`) determines how many groups the algorithm will try to form. Choosing more clusters can better fit fine-grained patterns but may overfit.
+        """)
+        
     clustering_method = st.selectbox("Choose clustering method:", ["K-Means", "Hierarchical"])
     n_clusters = st.slider("Number of clusters (k):", 2, 10, 4)
 
@@ -59,18 +58,25 @@ with st.expander("ℹ️ What are the clustering methods?"):
         with st.expander("ℹ️ Linkage Methods Explained"):
             st.markdown("""
             Linkage methods determine how distances between clusters are calculated in Hierarchical Clustering:
-    
+
             - **Ward**: Minimizes the variance within clusters; often gives compact and well-separated clusters.
             - **Single**: Uses the shortest distance between any two points in two clusters (can lead to long, chain-like clusters).
             - **Complete**: Uses the furthest distance between points in two clusters (tends to create compact, tight clusters).
             - **Average**: Averages all pairwise distances between points in the two clusters.
-    
+
             Different linkage choices can result in very different dendrogram shapes and cluster assignments.
             """)
-
-
+            
     n_components = st.slider("# PCA Components for Visualization:", 2, 3, 2)
+    with st.expander("ℹ️ What does PCA do and what's the difference between 2D vs 3D?"):
+        st.markdown("""
+        **PCA (Principal Component Analysis)** reduces high-dimensional data into 2 or 3 principal components that capture most of the variance in the data.
 
+        - **2D PCA** is easier to visualize and interpret.
+        - **3D PCA** can show more variance but may be harder to interpret due to perspective distortion.
+
+        This transformation helps simplify the dataset while preserving as much information as possible for plotting and clustering.
+        """)
 # -----------------------------------------------
 # Load Dataset
 # -----------------------------------------------
@@ -117,6 +123,15 @@ if data is not None:
         silhouette_avg = silhouette_score(X_scaled, cluster_labels)
         data['cluster'] = cluster_labels
 
+        with st.expander("ℹ️ What does the PCA Scatterplot show?"):
+            st.markdown("""
+            The scatterplot shows your data projected into 2 or 3 dimensions using PCA, colored by cluster assignment.
+
+            - Each point represents a sample from your dataset.
+            - Points close together are similar in terms of the original features.
+            - Coloring reflects which cluster each point belongs to, helping visualize groupings.
+            """)
+        
         st.subheader("PCA Scatter Plot")
         fig, ax = plt.subplots()
         scatter = ax.scatter(X_pca[:, 0], X_pca[:, 1], c=cluster_labels, cmap='viridis', s=50, edgecolors='k')
@@ -125,6 +140,17 @@ if data is not None:
         ax.set_title(f"PCA Clustering Visualization ({clustering_method})")
         st.pyplot(fig)
 
+        with st.expander("ℹ️ What is the Silhouette Score and Heatmap?"):
+            st.markdown("""
+            - **Silhouette Score** measures how similar a sample is to its own cluster compared to other clusters. 
+              Values range from -1 (wrong cluster) to +1 (well-clustered), with values near 0 indicating overlap.
+              
+            - **Silhouette Heatmap** visually shows the silhouette scores for each point in each cluster:
+                - Taller bars = better cohesion within the cluster.
+                - Negative bars = possible misclassification.
+                - Helps evaluate the quality of clustering and compare methods like K-Means vs Hierarchical.
+            """)
+        
         st.markdown(f"**Silhouette Score:** {silhouette_avg:.2f}")
 
         # -----------------------------------------------
@@ -157,21 +183,17 @@ if data is not None:
             for method in linkage_methods:
                 scores = []
                 for k in k_values:
-                    try:
-                        hc = AgglomerativeClustering(n_clusters=k, linkage=method)
-                        labels = hc.fit_predict(X_scaled)
-                        score = silhouette_score(X_scaled, labels)
-                        scores.append(score)
-                    except Exception as e:
-                        scores.append(np.nan)
+                    model = AgglomerativeClustering(n_clusters=k, linkage=method)
+                    labels = model.fit_predict(X_scaled)
+                    score = silhouette_score(X_scaled, labels)
+                    scores.append(score)
                 silhouette_scores[method] = scores
 
-            df_scores = pd.DataFrame(silhouette_scores, index=k_values).T
-            fig, ax = plt.subplots(figsize=(10, 4))
-            sns.heatmap(df_scores, annot=True, cmap="YlOrRd", fmt=".2f", ax=ax)
-            ax.set_ylabel("Linkage Method")
+            df_scores = pd.DataFrame(silhouette_scores, index=k_values)
+            fig, ax = plt.subplots()
+            sns.heatmap(df_scores.T, annot=True, cmap="YlGnBu", fmt=".2f", ax=ax)
             ax.set_xlabel("Number of Clusters (k)")
-            ax.set_title("Silhouette Scores for Hierarchical Clustering")
+            ax.set_title("Silhouette Scores for Hierarchical Linkages")
             st.pyplot(fig)
 
         # -----------------------------------------------
@@ -211,6 +233,23 @@ if data is not None:
                 st.warning("Plotly not installed. Install it with `pip install plotly` to view the map.")
         else:
             st.info("To show a choropleth map, your dataset must include a column named 'country'.")
+        if use_sample and "country" in data.columns:
+            st.subheader("World Map Visualization by Cluster")
+            if PLOTLY_AVAILABLE:
+                fig = px.choropleth(data, locations="country", locationmode="country names",
+                                    color="cluster", title="Country Clusters")
+                st.plotly_chart(fig)
+
+                with st.expander("ℹ️ What does the World Map show?"):
+                    st.markdown("""
+                    The map colors countries based on their cluster assignment.
+
+                    ✅ **It only works when:**
+                    - You're using the **sample dataset**, or
+                    - Your uploaded dataset includes a column with **country names** (standardized).
+
+                    This visualization helps see how clusters relate geographically, useful for global data analysis.
+                    """)
 
         # -----------------------------------------------
         # Elbow Plot for K-Means
@@ -242,12 +281,39 @@ if data is not None:
             ax.set_xlabel("Index")
             ax.set_ylabel("Distance")
             st.pyplot(fig)
+        if clustering_method == "Hierarchical":
+            st.subheader("Hierarchical Dendrogram")
+            linked = linkage(X_scaled, method=linkage_method)
+            fig, ax = plt.subplots(figsize=(10, 5))
+            dendrogram(linked, truncate_mode="lastp", p=n_clusters, ax=ax, show_contracted=True)
+            ax.axhline(y=linked[-n_clusters, 2], color='r', linestyle='--')
+            st.pyplot(fig)
 
+            with st.expander("ℹ️ What does the Hierarchical Dendrogram show?"):
+                st.markdown("""
+                The dendrogram displays how points are merged together into clusters at different distance thresholds.
+
+                - Each branch shows a merge between clusters or points.
+                - The **height of the branches** reflects the distance (or dissimilarity) between clusters.
+                - Dotted line (if shown) indicates the cut point based on your selected number of clusters.
+
+                ⚠️ **Note**: When using a dataset with many rows or non-unique indexes, the labels may overlap or be difficult to read. Focus on the **structure** of merges more than individual labels.
+                """)
         # -----------------------------------------------
         # Display Clustered Data
         # -----------------------------------------------
         st.subheader("Clustered Data Preview")
         st.dataframe(data[['cluster'] + [col for col in data.columns if col != 'cluster']].head())
+        with st.expander("📑 What is the difference between the data previews?"):
+            st.markdown("""
+            - **Initial Dataset Preview** shows your raw uploaded or sample dataset.
+            - **Clustered Data Preview** is the same dataset but with an added `Cluster` column, showing the result of your chosen clustering algorithm.
+
+            You can use this column to analyze differences between clusters in your dataset.
+            """)
+
+        st.subheader("Clustered Data Preview")
+        st.dataframe(data)
 else:
     st.info("Please upload a dataset or select a sample to begin.")
 
