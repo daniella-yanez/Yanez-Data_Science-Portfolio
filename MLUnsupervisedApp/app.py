@@ -1,0 +1,141 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.metrics import silhouette_score
+from scipy.cluster.hierarchy import linkage, dendrogram
+import plotly.express as px
+import kagglehub
+import os
+
+# -----------------------------------------------
+# Streamlit App Setup
+# -----------------------------------------------
+st.set_page_config(layout="wide")
+st.title("Interactive Clustering Explorer")
+
+# -----------------------------------------------
+# Sidebar: Data Upload and User Inputs
+# -----------------------------------------------
+with st.sidebar:
+    st.header("Upload and Select Options")
+    uploaded_file = st.file_uploader("Upload your CSV dataset", type=["csv"])
+    use_sample = st.checkbox("Use Sample Dataset (Country Data)", value=False)
+
+    clustering_method = st.selectbox("Choose clustering method:", ["K-Means", "Hierarchical"])
+
+    n_clusters = st.slider("Number of clusters (k):", 2, 10, 4)
+
+    linkage_method = "ward"
+    if clustering_method == "Hierarchical":
+        linkage_method = st.selectbox("Linkage method:", ["ward", "single", "complete", "average"])
+
+    n_components = st.slider("# PCA Components for Visualization:", 2, 3, 2)
+
+# -----------------------------------------------
+# Load Dataset
+# -----------------------------------------------
+if uploaded_file or use_sample:
+    if use_sample:
+        path = kagglehub.dataset_download("rohan0301/unsupervised-learning-on-country-data")
+        file_path = os.path.join(path, 'Country-data.csv')
+        data = pd.read_csv(file_path)
+    else:
+        data = pd.read_csv(uploaded_file)
+
+    numeric_data = data.select_dtypes(include=np.number)
+
+    if numeric_data.shape[1] == 0:
+        st.error("No numeric features found in the dataset.")
+    else:
+        st.subheader("Dataset Preview")
+        st.dataframe(data.head())
+
+        # -----------------------------------------------
+        # Preprocessing and Dimensionality Reduction
+        # -----------------------------------------------
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(numeric_data)
+
+        pca = PCA(n_components=n_components)
+        X_pca = pca.fit_transform(X_scaled)
+
+        # -----------------------------------------------
+        # Clustering
+        # -----------------------------------------------
+        if clustering_method == "K-Means":
+            model = KMeans(n_clusters=n_clusters, random_state=42)
+            cluster_labels = model.fit_predict(X_scaled)
+        else:
+            model = AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage_method)
+            cluster_labels = model.fit_predict(X_scaled)
+
+        silhouette_avg = silhouette_score(X_scaled, cluster_labels)
+        data['Cluster'] = cluster_labels
+
+        # -----------------------------------------------
+        # PCA Scatter Plot Visualization
+        # -----------------------------------------------
+        st.subheader("PCA Scatter Plot")
+        fig, ax = plt.subplots()
+        scatter = ax.scatter(X_pca[:, 0], X_pca[:, 1], c=cluster_labels, cmap='viridis', s=50, edgecolors='k')
+        ax.set_xlabel("PCA 1")
+        ax.set_ylabel("PCA 2")
+        ax.set_title(f"PCA Clustering Visualization ({clustering_method})")
+        st.pyplot(fig)
+
+        st.markdown(f"**Silhouette Score:** {silhouette_avg:.2f}")
+
+        # -----------------------------------------------
+        # World Map Visualization (if 'country' column exists)
+        # -----------------------------------------------
+        st.subheader("World Map Visualization (if 'country' column present)")
+        if 'country' in data.columns:
+            fig_map = px.choropleth(data, locations='country', locationmode='country names',
+                                    color='Cluster', title='Country Clusters', color_continuous_scale='Viridis')
+            st.plotly_chart(fig_map)
+        else:
+            st.info("Add a 'country' column to your data for map visualization.")
+
+        # -----------------------------------------------
+        # Elbow Plot for K-Means
+        # -----------------------------------------------
+        if clustering_method == "K-Means":
+            st.subheader("K-Means Elbow Plot")
+            distortions = []
+            K_range = range(2, 11)
+            for k in K_range:
+                km = KMeans(n_clusters=k, random_state=42)
+                km.fit(X_scaled)
+                distortions.append(km.inertia_)
+            fig, ax = plt.subplots()
+            ax.plot(K_range, distortions, 'bo-')
+            ax.set_xlabel('k')
+            ax.set_ylabel('Inertia')
+            ax.set_title('Elbow Method For Optimal k')
+            st.pyplot(fig)
+
+        # -----------------------------------------------
+        # Dendrogram for Hierarchical Clustering
+        # -----------------------------------------------
+        if clustering_method == "Hierarchical":
+            st.subheader("Hierarchical Dendrogram")
+            Z = linkage(X_scaled, method=linkage_method)
+            fig, ax = plt.subplots(figsize=(10, 5))
+            dendrogram(Z, labels=data.index.to_numpy(), ax=ax)
+            ax.set_title("Hierarchical Clustering Dendrogram")
+            ax.set_xlabel("Index")
+            ax.set_ylabel("Distance")
+            st.pyplot(fig)
+
+        # -----------------------------------------------
+        # Display Clustered Data
+        # -----------------------------------------------
+        st.subheader("Clustered Data Preview")
+        st.dataframe(data[['Cluster'] + [col for col in data.columns if col != 'Cluster']].head())
+else:
+    st.info("Please upload a dataset or select a sample to begin.")
