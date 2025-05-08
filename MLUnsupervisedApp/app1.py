@@ -38,16 +38,16 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Upload your CSV dataset", type=["csv"])
     use_sample = st.checkbox("Use Sample Dataset (Country Data)", value=False)
 
-    with st.expander("ℹ️ What are the clustering methods?"):
+ with st.expander("ℹ️ What are the clustering methods?"):
     st.markdown("""
-        **K-Means Clustering** partitions data into `k` groups by minimizing the distance between each point and its cluster center. 
-        It's fast and works best with spherical clusters of similar size.
+    **K-Means Clustering** partitions data into `k` groups by minimizing the distance between each point and its cluster center. 
+    It's fast and works best with spherical clusters of similar size.
     
-        **Hierarchical Clustering** builds a tree of clusters using either bottom-up (agglomerative) or top-down (divisive) merging. 
-        It's useful when you want to see nested groupings of data.
+    **Hierarchical Clustering** builds a tree of clusters using either bottom-up (agglomerative) or top-down (divisive) merging. 
+    It's useful when you want to see nested groupings of data.
     
-        📈 The number of clusters (`k`) determines how many groups the algorithm will try to form. Choosing more clusters can better fit fine-grained patterns but may overfit.
-        """)
+    The number of clusters (`k`) determines how many groups the algorithm will try to form. Choosing more clusters can better fit fine-grained patterns but may overfit.
+    """)   
 
     clustering_method = st.selectbox("Choose clustering method:", ["K-Means", "Hierarchical"])
     n_clusters = st.slider("Number of clusters (k):", 2, 10, 4)
