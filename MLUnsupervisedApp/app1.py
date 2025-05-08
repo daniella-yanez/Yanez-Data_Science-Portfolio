@@ -65,6 +65,8 @@ elif use_sample:
         st.warning("KaggleHub not installed. Please upload your own dataset or install KaggleHub.")
 
 if data is not None:
+    # Normalize column names
+    data.columns = [col.strip().lower() for col in data.columns]
     numeric_data = data.select_dtypes(include=np.number)
 
     if numeric_data.shape[1] == 0:
@@ -86,14 +88,14 @@ if data is not None:
         # Clustering
         # -----------------------------------------------
         if clustering_method == "K-Means":
-            model = KMeans(n_clusters=n_clusters, random_state=42, n_init='auto')
+            model = KMeans(n_clusters=n_clusters, random_state=42)
             cluster_labels = model.fit_predict(X_scaled)
         else:
             model = AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage_method)
             cluster_labels = model.fit_predict(X_scaled)
 
         silhouette_avg = silhouette_score(X_scaled, cluster_labels)
-        data['Cluster'] = cluster_labels
+        data['cluster'] = cluster_labels
 
         # -----------------------------------------------
         # PCA Scatter Plot Visualization
@@ -112,11 +114,15 @@ if data is not None:
         # World Map Visualization (if 'country' column exists)
         # -----------------------------------------------
         st.subheader("World Map Visualization (if 'country' column present)")
+        st.write("Columns in dataset:", list(data.columns))
         if 'country' in data.columns:
             if PLOTLY_AVAILABLE:
-                fig_map = px.choropleth(data, locations='country', locationmode='country names',
-                                        color='Cluster', title='Country Clusters', color_continuous_scale='Viridis')
-                st.plotly_chart(fig_map)
+                try:
+                    fig_map = px.choropleth(data, locations='country', locationmode='country names',
+                                            color='cluster', title='Country Clusters', color_continuous_scale='Viridis')
+                    st.plotly_chart(fig_map)
+                except Exception as e:
+                    st.error(f"Failed to generate choropleth: {e}")
             else:
                 st.warning("Plotly not installed. Install it to see the choropleth map.")
         else:
@@ -130,7 +136,7 @@ if data is not None:
             distortions = []
             K_range = range(2, 11)
             for k in K_range:
-                km = KMeans(n_clusters=k, random_state=42, n_init='auto')
+                km = KMeans(n_clusters=k, random_state=42)
                 km.fit(X_scaled)
                 distortions.append(km.inertia_)
             fig, ax = plt.subplots()
@@ -157,6 +163,6 @@ if data is not None:
         # Display Clustered Data
         # -----------------------------------------------
         st.subheader("Clustered Data Preview")
-        st.dataframe(data[['Cluster'] + [col for col in data.columns if col != 'Cluster']].head())
+        st.dataframe(data[['cluster'] + [col for col in data.columns if col != 'cluster']].head())
 else:
     st.info("Please upload a dataset or select a sample to begin.")
