@@ -86,7 +86,7 @@ if data is not None:
         # Clustering
         # -----------------------------------------------
         if clustering_method == "K-Means":
-            model = KMeans(n_clusters=n_clusters, random_state=42)
+            model = KMeans(n_clusters=n_clusters, random_state=42, n_init='auto')
             cluster_labels = model.fit_predict(X_scaled)
         else:
             model = AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage_method)
@@ -130,7 +130,7 @@ if data is not None:
             distortions = []
             K_range = range(2, 11)
             for k in K_range:
-                km = KMeans(n_clusters=k, random_state=42)
+                km = KMeans(n_clusters=k, random_state=42, n_init='auto')
                 km.fit(X_scaled)
                 distortions.append(km.inertia_)
             fig, ax = plt.subplots()
