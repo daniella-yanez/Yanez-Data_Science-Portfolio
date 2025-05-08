@@ -113,16 +113,47 @@ if data is not None:
         st.write("Columns in dataset:", list(data.columns))
         if 'country' in data.columns:
             if PLOTLY_AVAILABLE:
+                st.markdown("### Choropleth Map")
+        
+                # Select variable to color by
+                choropleth_variable = st.selectbox(
+                    "Choose a variable to visualize on the world map:",
+                    options=["cluster", "income", "child_mort", "health", "life_expec", "gdpp"]
+                )
+        
                 try:
-                    fig_map = px.choropleth(data, locations='country', locationmode='country names',
-                                            color='cluster', title='Country Clusters', color_continuous_scale='Viridis')
+                    if choropleth_variable == "cluster":
+                        data["cluster"] = data["cluster"].astype(str)
+                        fig_map = px.choropleth(
+                            data,
+                            locations="country",
+                            locationmode="country names",
+                            color="cluster",
+                            hover_name="country",
+                            color_discrete_sequence=px.colors.qualitative.Set3,
+                            title="World Map Colored by Cluster"
+                        )
+                    else:
+                        fig_map = px.choropleth(
+                            data,
+                            locations="country",
+                            locationmode="country names",
+                            color=choropleth_variable,
+                            hover_name="country",
+                            hover_data=["income", "health", "life_expec", "gdpp"],
+                            color_continuous_scale="Viridis",
+                            title=f"World Map Colored by {choropleth_variable.capitalize()}"
+                        )
+        
                     st.plotly_chart(fig_map)
+        
                 except Exception as e:
                     st.error(f"Failed to generate choropleth: {e}")
             else:
                 st.warning("Plotly not installed. Install it to see the choropleth map.")
         else:
             st.info("Add a 'country' column to your data for map visualization.")
+
 
         # -----------------------------------------------
         # Elbow Plot for K-Means
