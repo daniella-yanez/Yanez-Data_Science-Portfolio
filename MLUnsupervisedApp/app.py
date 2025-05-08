@@ -56,7 +56,7 @@ if uploaded_file:
 elif use_sample:
     try:
         app_dir = os.path.dirname(__file__) #makes app portable
-        file_path = os.path.join("data", "Country-data.csv")
+        file_path = os.path.join(app_dir, "data", "Country-data.csv")
         data = pd.read_csv(file_path)
     except Exception as e:
         st.error(f"Failed to load bundled sample dataset: {e}")
