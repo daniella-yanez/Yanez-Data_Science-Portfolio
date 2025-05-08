@@ -38,6 +38,18 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Upload your CSV dataset", type=["csv"])
     use_sample = st.checkbox("Use Sample Dataset (Country Data)", value=False)
 
+    clustering_method = st.selectbox("Choose clustering method:", ["K-Means", "Hierarchical"])
+    n_clusters = st.slider("Number of clusters (k):", 2, 10, 4)
+
+    linkage_method = "ward"
+    if clustering_method == "Hierarchical":
+        linkage_method = st.selectbox("Linkage method:", ["ward", "single", "complete", "average"])
+        sample_size = st.slider("Sample size for dendrogram (0 = all):", 0, 500, 0)
+        truncate_mode = st.checkbox("Truncate dendrogram display?")
+        p_trunc = st.slider("# of clusters to show in truncated dendrogram:", 2, 20, 10)
+
+    n_components = st.slider("# PCA Components for Visualization:", 2, 3, 2)
+
 # -----------------------------------------------
 # Load Dataset
 # -----------------------------------------------
@@ -69,44 +81,11 @@ if data is not None:
         st.dataframe(data.head())
 
         # -----------------------------------------------
-        # Preprocessing and PCA
+        # Preprocessing and Dimensionality Reduction
         # -----------------------------------------------
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(numeric_data)
 
-        # Suggest optimal number of clusters (KMeans with silhouette)
-        silhouette_scores = {}
-        for k in range(2, 11):
-            km = KMeans(n_clusters=k, random_state=42)
-            labels = km.fit_predict(X_scaled)
-            silhouette_scores[k] = silhouette_score(X_scaled, labels)
-        suggested_k = max(silhouette_scores, key=silhouette_scores.get)
-
-        # Sidebar controls after suggestion
-        with st.sidebar:
-            st.header("Clustering Parameters")
-            clustering_method = st.selectbox("Choose clustering method:", ["K-Means", "Hierarchical"])
-            use_suggestion = st.checkbox(f"Use suggested number of clusters (k={suggested_k})", value=True)
-            if use_suggestion:
-                n_clusters = suggested_k
-            else:
-                n_clusters = st.slider("Number of clusters (k):", 2, 10, suggested_k)
-
-            linkage_method = "ward"
-            if clustering_method == "Hierarchical":
-                linkage_method = st.selectbox("Linkage method:", ["ward", "single", "complete", "average"])
-
-            n_components = st.slider("# PCA Components for Visualization:", 2, 3, 2)
-
-            if clustering_method == "Hierarchical":
-                sample_size = st.slider("Sample size for dendrogram (0 = full dataset):", 0, 500, 100)
-                truncate_dendrogram = st.checkbox("Truncate dendrogram? (Show only last p merges)")
-                truncate_mode = 'lastp' if truncate_dendrogram else None
-                p_value = st.slider("# Clusters to display (used if truncating):", 2, 30, 10) if truncate_dendrogram else None
-
-        st.info(f"Suggested number of clusters based on silhouette score: {suggested_k}")
-
-        # Run PCA
         pca = PCA(n_components=n_components)
         X_pca = pca.fit_transform(X_scaled)
 
@@ -124,7 +103,7 @@ if data is not None:
         data['cluster'] = cluster_labels
 
         # -----------------------------------------------
-        # PCA Scatter Plot
+        # PCA Scatter Plot Visualization
         # -----------------------------------------------
         st.subheader("PCA Scatter Plot")
         fig, ax = plt.subplots()
@@ -137,7 +116,7 @@ if data is not None:
         st.markdown(f"**Silhouette Score:** {silhouette_avg:.2f}")
 
         # -----------------------------------------------
-        # World Map Visualization
+        # World Map Visualization (for any dataset with 'country' column)
         # -----------------------------------------------
         st.subheader("World Map Visualization")
 
@@ -197,23 +176,19 @@ if data is not None:
         # -----------------------------------------------
         if clustering_method == "Hierarchical":
             st.subheader("Hierarchical Dendrogram")
-            sample_indices = data.index.to_numpy()
+            dendro_data = X_scaled
+            labels = data.index.to_numpy()
             if sample_size > 0 and sample_size < X_scaled.shape[0]:
-                sampled_indices = np.random.choice(X_scaled.shape[0], sample_size, replace=False)
-                X_dendro = X_scaled[sampled_indices]
-                sample_indices = data.index[sampled_indices]
-            else:
-                X_dendro = X_scaled
+                sampled_idx = np.random.choice(X_scaled.shape[0], sample_size, replace=False)
+                dendro_data = X_scaled[sampled_idx]
+                labels = labels[sampled_idx]
 
-            Z = linkage(X_dendro, method=linkage_method)
+            Z = linkage(dendro_data, method=linkage_method)
             fig, ax = plt.subplots(figsize=(10, 5))
-            dendrogram(
-                Z,
-                labels=sample_indices,
-                ax=ax,
-                truncate_mode=truncate_mode,
-                p=p_value if truncate_mode else None
-            )
+            if truncate_mode:
+                dendrogram(Z, truncate_mode='lastp', p=p_trunc, ax=ax, show_contracted=True)
+            else:
+                dendrogram(Z, labels=labels, ax=ax)
             ax.set_title("Hierarchical Clustering Dendrogram")
             ax.set_xlabel("Index")
             ax.set_ylabel("Distance")
