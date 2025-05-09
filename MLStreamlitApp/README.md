@@ -93,3 +93,7 @@ This section explains what the model results mean in plain language:
 ## References
 - [An Introduction to Statistical Learning](https://www.statlearning.com/)
 - [RMSE vs. R-Squared: Which Metric Should You Use?](https://www.statology.org/rmse-vs-r-squared/)
+
+---
+## Contact
+**For any questions, email daniellamartinezyanez7@gmail.com**
