@@ -69,15 +69,24 @@ pip install -r requirements.txt
 ---
 
 ## Visual Examples (to be added later)
-1. K-Means Clustering Example
+
+<h3>1. User Input Interface</h3>
+<img src="images/UserInput.png" alt="Interface Screenshot" width="380"/>
+
+**  **
+
+<h3>2. K-Means Clustering Example</h3>
+<img src="images/K-MeansElbowPlot.png" alt="K-Means Clustering Example Screenshot" width="380"/>
    
 **  **
 
-2. Hierarchical Clustering Dendrogram
+<h3>3. Hierarchical Clustering Dendrogram</h3>
+<img src="images/HierarchicalDendrogram.png" alt="Hierarchical Clustering Dendrogram Screenshot" width="380"/>
 
 **  **
 
-3. PCA Scree Plot and 2D Projection
+<h3>4. PCA Scree Plot and 2D Projection</h3>
+<img src="images/PCAscatterplot.png" alt="PCA Scree Plot and 2D Projection Screenshot" width="380"/>
 
 ---
 
@@ -92,3 +101,6 @@ pip install -r requirements.txt
 
 - [Plotly Python Library](https://plotly.com/python/)
 
+---
+## Contact
+**For any questions, email daniellamartinezyanez7@gmail.com**
