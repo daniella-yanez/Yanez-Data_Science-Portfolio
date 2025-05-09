@@ -318,18 +318,6 @@ else:
     st.info("Please upload a dataset or select a sample to begin.")
 
 
-
-# -----------------------------------------------
-# Interpret Results
-# -----------------------------------------------
-st.markdown("### Results Interpretation")
-st.write(f"Your model predicts correctly about **{accuracy * 100:.2f}%** of the time.")
-st.markdown("- The confusion matrix shows how many predictions were correct (diagonal) vs incorrect (off-diagonal)steru.")
-if len(np.unique(y)) == 2:
-    st.markdown("- Since this is a binary classification problem, we also show the ROC curve and AUC score as additional metrics.")
-else:
-    st.markdown("- This is a multiclass classification problem; precision, recall, and F1-score per class help interpret the results.")
-
 # -----------------------------------------------
 # Final Note
 # -----------------------------------------------
