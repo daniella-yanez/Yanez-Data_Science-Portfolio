@@ -1,0 +1,11 @@
+12/01
+pip install crewai = 1.4.1
+    pip install crewai installed 1.6.1
+conda install duckdb = 1.2.1
+    conda install duckdb installed 1.6.1
+conda install sentence_transformers = 5.1.2
+    conda install sentence-transformers installed 4.1.0
+conda install streamlit = 1.37.1
+    conda install streamlit installed 1.51.0
+pip install pipreqs
+    installed pipreqs
