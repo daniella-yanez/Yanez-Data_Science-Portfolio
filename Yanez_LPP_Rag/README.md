@@ -1,143 +1,177 @@
 # CivicMatch
-*A friendly, local-first guide to civic life*
-
-## Overview
-
-CivicMatch is a conversational civic engagement application designed to help people explore local politics, public issues, and democratic participation—especially those who may have little to no prior experience with civic engagement.
-
-Rather than assuming political knowledge or strong partisan interest, CivicMatch meets users where they are. It encourages curiosity, critical thinking, and confidence by providing structured, evidence-based answers in a supportive and approachable tone.
-
-The project currently focuses on a **pilot deployment for South Bend / St. Joseph County, Indiana**, allowing for small-scale evaluation of how conversational tools can increase civic awareness and sustained engagement.
+*A local-first, conversational civic engagement platform*
 
 ---
 
-## Project Goals
+## 1. Project Overview
 
-CivicMatch is built around three core goals:
+CivicMatch is a conversational civic engagement application designed to help individuals explore local politics, public policy, and democratic participation—especially those with little to no prior experience in civic engagement.
 
-1. **Lower the barrier to civic participation**  
-   Make civic information accessible to users who feel intimidated, disengaged, or unsure where to start.
+The project focuses on lowering informational and psychological barriers to participation by presenting verified civic information in a friendly, nonjudgmental, and structured conversational format. Rather than assuming political knowledge or partisan alignment, CivicMatch encourages curiosity, reflection, and informed decision-making.
 
-2. **Encourage informed and reflective exploration**  
-   Help users compare representatives, policies, and issues without telling them what to think.
-
-3. **Support democratic habits, not just election moments**  
-   Promote ongoing engagement such as learning about local issues, understanding representatives’ roles, and exploring ways to participate beyond voting.
+The current pilot deployment focuses on **South Bend / St. Joseph County, Indiana**, allowing the project to evaluate how effective a small-scale, locally grounded tool can be at increasing civic interest and sustained engagement.
 
 ---
 
-## Key Features
+## 2. Project Goals
 
-- 🧠 **Conversational Civic Assistant**  
-  Users ask natural-language questions about local politics, legislation, and representatives.
+CivicMatch is built around four core goals:
 
-- 📚 **Retrieval-Augmented Generation (RAG)**  
-  Responses are grounded in verified legislative and civic source material using semantic search.
+1. **Accessibility**  
+   Make civic information understandable and welcoming for first-time or disengaged users.
 
-- 🗺️ **Local Context Awareness**  
-  Answers can be tailored by city, county, and state to emphasize relevance.
+2. **Informed Exploration**  
+   Provide evidence-based explanations of representatives, policies, and issues without persuasion.
 
-- 🧭 **Interest-Guided Exploration**  
-  Users can select issue areas they care about (e.g., healthcare, immigration, education), which shapes follow-up prompts and exploration paths.
+3. **Critical Civic Thinking**  
+   Encourage users to reflect on how policies and representatives align with their own values.
 
-- 🤝 **Supportive & Nonjudgmental Tone**  
-  The assistant remains neutral while acknowledging users’ values, including when users express strong partisan leanings.
-
-- 🔍 **Source Transparency**  
-  Every answer includes accessible source passages so users can verify and explore further.
+4. **Sustained Democratic Engagement**  
+   Support ongoing civic participation beyond single elections or political moments.
 
 ---
 
-## Why This Project Exists
+## 3. System Architecture
 
-Many civic tools assume users already care deeply about politics or understand how government works. CivicMatch challenges that assumption.
+CivicMatch uses a **Retrieval-Augmented Generation (RAG)** architecture to ensure that responses are both conversational and grounded in verified source material.
 
-This project is especially designed for:
-- First-time voters  
-- Young adults and students  
-- Community members who feel disconnected from politics  
-- Users who want information without pressure or partisanship  
+### High-Level Flow
 
-CivicMatch treats civic engagement as a **skill that can be learned**, not a prerequisite.
+1. A user submits a civic or political question through the Streamlit interface.
+2. The agent evaluates whether retrieving source material will improve the answer.
+3. If retrieval is helpful, the agent queries a DuckDB-based vector database using semantic search.
+4. Relevant passages are returned and provided to the language model.
+5. The model synthesizes a structured, plain-language response.
+6. Retrieved sources are displayed transparently for user review.
 
----
-
-## Technology Stack
-
-- **Frontend:** Streamlit  
-- **Backend:** Python  
-- **LLM Integration:** OpenAI API  
-- **Vector Database:** DuckDB (embeddings-based semantic search)  
-- **Architecture:** Retrieval-Augmented Generation (RAG)
+This approach balances accessibility with factual reliability while maintaining transparency.
 
 ---
 
-## How It Works
+## 4. Agent Design & Configuration Rationale
 
-1. User submits a civic question through a chat interface.
-2. The system retrieves relevant legislative or civic documents from a local vector database.
-3. The language model generates a response grounded in those sources.
-4. Sources are displayed transparently for user review.
-5. The assistant encourages further exploration based on user interests and local context.
+The CivicMatch agent is intentionally designed with specific constraints to support ethical and effective civic engagement.
 
----
+### Key Design Decisions
 
-## Pilot Scope
+- **Limited Retrieval Calls**  
+  The agent is restricted in how often it can query the database to prioritize synthesis over endless searching.
 
-The current pilot focuses on:
-- **South Bend / St. Joseph County, Indiana**
-- Testing engagement among users with low initial civic interest
-- Evaluating whether conversational design increases:
-  - Time spent exploring civic topics
-  - Willingness to ask follow-up questions
-  - Understanding of local representatives and issues
+- **Structured Yet Conversational Output**  
+  Responses follow a consistent structure (Conclusion, Evidence, Why This Matters, Follow-Up) while maintaining a supportive and approachable tone.
 
-The architecture is intentionally designed to scale to other locations and election cycles.
+- **Non-Partisan and Non-Persuasive Behavior**  
+  The agent explains legislative actions and policy positions without endorsing candidates or parties.
+
+- **Encouragement Without Judgment**  
+  When users express strong partisan preferences, the agent acknowledges those views respectfully while encouraging critical comparison and reflection.
+
+These choices reflect the project’s goal of increasing civic confidence rather than directing political outcomes.
 
 ---
 
-## Ethical Commitments
+## 5. Core Features
 
-- Nonpartisan and evidence-based responses  
-- Transparency in sources  
-- Respect for user values and uncertainty  
-- No persuasion or voter manipulation  
-
-CivicMatch does **not** tell users who to support—it helps them decide for themselves.
+- **Conversational Civic Assistant** for natural-language questions
+- **Verified Source Grounding** using semantic retrieval
+- **Local Context Awareness** (city, county, and state)
+- **Interest-Guided Exploration** based on user-selected issues
+- **Transparent Source Display** for trust and verification
+- **Supportive, Beginner-Friendly Tone** designed for civic newcomers
 
 ---
 
-## Future Directions
+## 6. Pilot Scope
+
+The initial pilot focuses on residents of **South Bend / St. Joseph County, Indiana**.
+
+The pilot evaluates:
+- User engagement over time
+- Willingness to explore follow-up questions
+- Increased understanding of local representatives and policies
+- Comfort level among users with low initial civic interest
+
+The system is designed to scale to other localities and election cycles.
+
+---
+
+## 7. Technology Stack
+
+- **Frontend:** Streamlit
+- **Backend:** Python
+- **LLM Integration:** OpenAI API
+- **Vector Database:** DuckDB (embeddings-based semantic search)
+- **Architecture Pattern:** Retrieval-Augmented Generation (RAG)
+
+---
+
+## 8. Setup & Installation
+
+### Prerequisites
+- Python 3.10 or higher
+- OpenAI API key
+
+### Installation
+
+```bash
+git clone https://github.com/daniella-yanez/Yanez-Data_Science-Portfolio.git
+cd Yanez-Data_Science-Portfolio/Yanez_LPP_Rag
+pip install -r requirements.txt
+```
+
+###Environment Variables
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+###Running the Application
+```bash
+streamlit run final_app.py
+```
+
+
+### Database Configuration
+
+CivicMatch uses a DuckDB vector database containing pre-embedded civic and legislative documents.  
+The database path can be configured either through the Streamlit sidebar at runtime or by updating the `config.py` file.
+
+---
+
+## 9. Ethical Commitments
+
+CivicMatch is guided by the following principles:
+
+- **Evidence-based responses** grounded in verified legislative and civic sources  
+- **Transparency** in sourcing, reasoning, and limitations  
+- **Respect for user values and uncertainty**, including differing political perspectives  
+- **No political persuasion or targeted messaging**
+
+The application is designed to inform and support civic understanding—not to influence political choices.
+
+---
+
+## 10. Future Development
 
 Planned expansions include:
-- Local event and meeting discovery
-- “Ways to get involved” prompts tailored to user interests
-- Representative comparison tools
-- Civic learning paths for beginners
-- Deployment beyond Indiana
+
+- Broader geographic coverage beyond the initial pilot region  
+- Civic action and participation prompts tailored to user interests  
+- Representative and policy comparison tools  
+- Guided learning paths for first-time civic participants  
+- Integration of local events, meetings, and community engagement opportunities  
 
 ---
 
-## Getting Started
+## 11. License & Use
 
-1. Clone the repository
-2. Install dependencies
-3. Add your OpenAI API key
-4. Connect a DuckDB vector database
-5. Run the Streamlit app
-
-(Setup details may vary depending on data source configuration.)
+This project is developed for educational and research purposes.  
+Licensing details will be added in future releases.
 
 ---
 
-## Author & Motivation
+## 12. Author & Motivation
 
-CivicMatch was created as an exploratory civic technology project focused on democratic access, inclusion, and education at the local level.
+CivicMatch was created as a civic technology research project focused on democratic access, inclusion, and local engagement.
 
-It is motivated by the belief that democracy works best when people feel informed, welcomed, and empowered to participate—regardless of where they start.
+The project is grounded in the belief that democracy functions best when people feel informed, welcomed, and empowered to participate—regardless of where they begin.
 
----
-
-## License
-
-This project is for educational and research purposes. Licensing details to be added.
